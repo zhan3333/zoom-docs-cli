@@ -12,10 +12,10 @@ pnpm-lock.yaml
 # Generated Zoom Docs exports and scratch files.
 *.md
 !README.md
+!API.md
 *.txt
 
 # OS/editor noise.
 .DS_Store
 .idea/
 .vscode/
-
