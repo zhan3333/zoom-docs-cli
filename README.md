@@ -20,6 +20,8 @@ Some Zoom UI/docs may also display the scope as:
 docs_export:read
 ```
 
+Some admin-level endpoints, such as `root`, require additional admin Docs scopes like `docs:read:file:admin`.
+
 ## Zoom App Setup
 
 Create a Zoom **General App** in the Zoom App Marketplace.
@@ -122,6 +124,7 @@ zoom-docs-cli config show
 zoom-docs-cli token status
 zoom-docs-cli auth logout
 zoom-docs-cli metadata "https://docs.zoom.us/doc/cUD70vChRIydsC_ci1rfaw"
+zoom-docs-cli root me
 ```
 
 To remove old confidential OAuth credentials from local config:

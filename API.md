@@ -48,7 +48,7 @@ Source: <https://developers.zoom.us/docs/api/canvas/>
 
 | Status | API | CLI command |
 | --- | --- | --- |
-| Pending | `GET /docs/users/{userId}/root` - Get user's My Docs information | |
+| Done | `GET /docs/users/{userId}/root` - Get user's My Docs information. Requires `docs:read:file:admin` for the tested app. | `zoom-docs-cli root [userId]` |
 
 ## Imports And Uploads
 

@@ -58,6 +58,11 @@ async function main() {
     return;
   }
 
+  if (command === "root") {
+    await handleRoot(args);
+    return;
+  }
+
   throw new Error(`Unknown command: ${command}`);
 }
 
@@ -185,6 +190,13 @@ async function handleMetadata(args) {
   console.log(JSON.stringify(metadata, null, 2));
 }
 
+async function handleRoot(args) {
+  const userId = args._[1] || "me";
+  const accessToken = await getValidAccessToken(args);
+  const root = await getUserRoot(accessToken, userId);
+  console.log(JSON.stringify(root, null, 2));
+}
+
 async function getFileContent(accessToken, fileId) {
   const response = await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}/content`, {
     method: "GET",
@@ -199,6 +211,14 @@ async function getFileContent(accessToken, fileId) {
 
 async function getFileMetadata(accessToken, fileId) {
   const response = await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}`, {
+    method: "GET",
+    accessToken
+  });
+  return response.json();
+}
+
+async function getUserRoot(accessToken, userId) {
+  const response = await zoomFetch(`/docs/users/${encodeURIComponent(userId)}/root`, {
     method: "GET",
     accessToken
   });
@@ -580,6 +600,7 @@ Usage:
   zoom-docs-cli token status
   zoom-docs-cli get <docs.zoom.us/doc URL | fileId> [--out FILE] [--json]
   zoom-docs-cli metadata <docs.zoom.us/doc URL | fileId>
+  zoom-docs-cli root [userId]
 
 Environment:
   ZOOM_PUBLIC_CLIENT_ID Defaults to ${DEFAULT_PUBLIC_CLIENT_ID}
