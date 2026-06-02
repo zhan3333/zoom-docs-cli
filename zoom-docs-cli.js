@@ -9,6 +9,7 @@ import { spawn } from "node:child_process";
 import { URL } from "node:url";
 
 const API_BASE = "https://api.zoom.us/v2";
+const FILE_API_BASE = "https://fileapi.zoom.us/v2";
 const OAUTH_AUTHORIZE_URL = "https://zoom.us/oauth/authorize";
 const OAUTH_TOKEN_URL = "https://zoom.us/oauth/token";
 const DEFAULT_REDIRECT_URI = "http://localhost:8765/callback";
@@ -90,6 +91,11 @@ async function main() {
 
   if (command === "import-content") {
     await handleImportContent(args);
+    return;
+  }
+
+  if (command === "file-upload") {
+    await handleFileUpload(args);
     return;
   }
 
@@ -330,6 +336,16 @@ async function handleImportContent(args) {
   console.log(JSON.stringify(result, null, 2));
 }
 
+async function handleFileUpload(args) {
+  if (!args.file) {
+    throw new Error("Usage: zoom-docs-cli file-upload --file PATH");
+  }
+
+  const accessToken = await getValidAccessToken(args);
+  const result = await createFileUpload(accessToken, String(args.file));
+  console.log(JSON.stringify(result, null, 2));
+}
+
 async function handleCreate(args) {
   const fileName = args["file-name"] || args.name || "Untitled";
   const fileType = args["file-type"] || args.type || "doc";
@@ -434,6 +450,63 @@ async function createFileFromContent(accessToken, { file_name, parent_id, conten
     body: JSON.stringify(body)
   });
   return response.json();
+}
+
+async function createFileUpload(accessToken, filePath) {
+  const absolutePath = path.resolve(filePath);
+  const data = await fs.readFile(absolutePath);
+  const form = new FormData();
+  form.append("file", new Blob([data]), path.basename(absolutePath));
+
+  const response = await fetchWithRetainedAuthorization(`${FILE_API_BASE}/docs/file_uploads`, {
+    method: "POST",
+    accessToken,
+    body: form
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    let payload;
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = { message: text };
+    }
+    const error = new Error(`Zoom file API failed: HTTP ${response.status} ${JSON.stringify(payload)}`);
+    error.status = response.status;
+    error.zoomCode = payload.code;
+    error.payload = payload;
+    throw error;
+  }
+
+  return response.json();
+}
+
+async function fetchWithRetainedAuthorization(url, { method, accessToken, body }, redirectCount = 0) {
+  if (redirectCount > 5) {
+    throw new Error("Too many redirects while calling Zoom file API.");
+  }
+
+  const response = await fetch(url, {
+    method,
+    headers: {
+      "Authorization": `Bearer ${accessToken}`
+    },
+    body,
+    redirect: "manual"
+  });
+
+  if ([301, 302, 303, 307, 308].includes(response.status)) {
+    const location = response.headers.get("location");
+    if (!location) return response;
+    return fetchWithRetainedAuthorization(new URL(location, url).toString(), {
+      method,
+      accessToken,
+      body
+    }, redirectCount + 1);
+  }
+
+  return response;
 }
 
 async function createFile(accessToken, { file_name, file_type, parent_id }) {
@@ -870,6 +943,7 @@ Usage:
   zoom-docs-cli collaborators <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli general-access <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli import-content --file FILE.md [--file-name NAME] [--parent-id FILE_ID]
+  zoom-docs-cli file-upload --file PATH
   zoom-docs-cli create [--file-name NAME] [--file-type doc|folder|data_table] [--parent-id FILE_ID]
   zoom-docs-cli rename <docs.zoom.us/doc URL | fileId> --file-name NAME
   zoom-docs-cli delete <docs.zoom.us/doc URL | fileId> --yes
