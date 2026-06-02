@@ -1,0 +1,28 @@
+{
+  "name": "zoom-docs-cli",
+  "version": "0.1.0",
+  "description": "CLI for exporting Zoom Docs content through Zoom Canvas APIs.",
+  "type": "module",
+  "bin": {
+    "zoom-docs-cli": "./zoom-docs-cli.js"
+  },
+  "files": [
+    "zoom-docs-cli.js",
+    "README.md"
+  ],
+  "scripts": {
+    "check": "node ./zoom-docs-cli.js --help"
+  },
+  "keywords": [
+    "zoom",
+    "zoom-docs",
+    "canvas",
+    "oauth",
+    "pkce",
+    "markdown"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED"
+}

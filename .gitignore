@@ -1,0 +1,21 @@
+# Local credentials and tokens.
+.zoom-docs-cli/
+.env
+.env.*
+
+# Dependencies and package manager state.
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Generated Zoom Docs exports and scratch files.
+*.md
+!README.md
+*.txt
+
+# OS/editor noise.
+.DS_Store
+.idea/
+.vscode/
+
