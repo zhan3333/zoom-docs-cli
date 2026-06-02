@@ -123,6 +123,8 @@ and downloads the generated Markdown export.
 zoom-docs-cli config show
 zoom-docs-cli token status
 zoom-docs-cli auth logout
+zoom-docs-cli export "https://docs.zoom.us/doc/cUD70vChRIydsC_ci1rfaw" --format markdown --wait --out doc.md
+zoom-docs-cli export-status EXPORT_ID
 zoom-docs-cli metadata "https://docs.zoom.us/doc/cUD70vChRIydsC_ci1rfaw"
 zoom-docs-cli root me
 zoom-docs-cli children "https://docs.zoom.us/doc/cUD70vChRIydsC_ci1rfaw"

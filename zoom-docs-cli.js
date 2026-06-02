@@ -53,6 +53,16 @@ async function main() {
     return;
   }
 
+  if (command === "export") {
+    await handleExport(args);
+    return;
+  }
+
+  if (command === "export-status") {
+    await handleExportStatus(args);
+    return;
+  }
+
   if (command === "metadata") {
     await handleMetadata(args);
     return;
@@ -211,6 +221,44 @@ async function handleGet(args) {
 
   await fs.writeFile(outPath, result.file_content, "utf8");
   console.log(`Saved ${outPath}`);
+}
+
+async function handleExport(args) {
+  const input = args._[1];
+  if (!input) {
+    throw new Error("Usage: zoom-docs-cli export <docs.zoom.us/doc URL | fileId> [--format markdown|docx|pdf|csv] [--wait] [--out FILE]");
+  }
+
+  const fileId = extractFileId(input);
+  const exportFormat = args.format || "markdown";
+  const accessToken = await getValidAccessToken(args);
+  const created = await createExport(accessToken, fileId, exportFormat);
+
+  if (!args.wait) {
+    console.log(JSON.stringify(created, null, 2));
+    return;
+  }
+
+  const result = await waitForExport(accessToken, created.export_id);
+  if (args.out && result.download_link) {
+    const download = await fetch(result.download_link);
+    if (!download.ok) {
+      throw new Error(`Failed to download export: HTTP ${download.status} ${download.statusText}`);
+    }
+    await fs.writeFile(path.resolve(String(args.out)), new Uint8Array(await download.arrayBuffer()));
+  }
+  console.log(JSON.stringify(result, null, 2));
+}
+
+async function handleExportStatus(args) {
+  const exportId = args._[1];
+  if (!exportId) {
+    throw new Error("Usage: zoom-docs-cli export-status <exportId>");
+  }
+
+  const accessToken = await getValidAccessToken(args);
+  const status = await getExportStatus(accessToken, exportId);
+  console.log(JSON.stringify(status, null, 2));
 }
 
 async function handleMetadata(args) {
@@ -416,48 +464,61 @@ async function deleteFile(accessToken, fileId) {
 }
 
 async function exportFileAsMarkdown(accessToken, fileId) {
-  const createResponse = await zoomFetch("/docs/exports", {
+  const created = await createExport(accessToken, fileId, "markdown");
+  const status = await waitForExport(accessToken, created.export_id);
+  if (!status.download_link) throw new Error("Zoom export succeeded but no download_link was returned.");
+  const download = await fetch(status.download_link);
+  if (!download.ok) {
+    throw new Error(`Failed to download export: HTTP ${download.status} ${download.statusText}`);
+  }
+  const fileContent = await download.text();
+  return {
+    file_name: fileId,
+    file_content: fileContent,
+    export_id: created.export_id,
+    expires_at: status.expires_at,
+    download_link: status.download_link
+  };
+}
+
+async function createExport(accessToken, fileId, exportFormat) {
+  const response = await zoomFetch("/docs/exports", {
     method: "POST",
     accessToken,
     body: JSON.stringify({
       file_id: fileId,
-      export_format: "markdown"
+      export_format: exportFormat
     })
   });
-  const created = await createResponse.json();
+  const created = await response.json();
   if (!created.export_id) throw new Error("Zoom did not return an export_id.");
+  return created;
+}
 
+async function waitForExport(accessToken, exportId) {
   const started = Date.now();
   while (Date.now() - started < 120_000) {
     await sleep(1500);
-    const statusResponse = await zoomFetch(`/docs/exports/${encodeURIComponent(created.export_id)}/status`, {
-      method: "GET",
-      accessToken
-    });
-    const status = await statusResponse.json();
+    const status = await getExportStatus(accessToken, exportId);
 
     if (status.status === "failed") {
-      throw new Error(`Zoom export failed for export_id ${created.export_id}.`);
+      throw new Error(`Zoom export failed for export_id ${exportId}.`);
     }
 
     if (status.status === "succeeded") {
-      if (!status.download_link) throw new Error("Zoom export succeeded but no download_link was returned.");
-      const download = await fetch(status.download_link);
-      if (!download.ok) {
-        throw new Error(`Failed to download export: HTTP ${download.status} ${download.statusText}`);
-      }
-      const fileContent = await download.text();
-      return {
-        file_name: fileId,
-        file_content: fileContent,
-        export_id: created.export_id,
-        expires_at: status.expires_at,
-        download_link: status.download_link
-      };
+      return status;
     }
   }
 
   throw new Error("Timed out waiting for Zoom export to finish.");
+}
+
+async function getExportStatus(accessToken, exportId) {
+  const response = await zoomFetch(`/docs/exports/${encodeURIComponent(exportId)}/status`, {
+    method: "GET",
+    accessToken
+  });
+  return response.json();
 }
 
 async function getValidAccessToken(args) {
@@ -801,6 +862,8 @@ Usage:
   zoom-docs-cli auth logout
   zoom-docs-cli token status
   zoom-docs-cli get <docs.zoom.us/doc URL | fileId> [--out FILE] [--json]
+  zoom-docs-cli export <docs.zoom.us/doc URL | fileId> [--format markdown|docx|pdf|csv] [--wait] [--out FILE]
+  zoom-docs-cli export-status <exportId>
   zoom-docs-cli metadata <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli root [userId]
   zoom-docs-cli children <docs.zoom.us/doc URL | fileId>

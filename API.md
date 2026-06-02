@@ -19,8 +19,8 @@ Source: <https://developers.zoom.us/docs/api/canvas/>
 
 | Status | API | CLI command |
 | --- | --- | --- |
-| Done | `POST /docs/exports` - Create export | `zoom-docs-cli get <file>` fallback |
-| Done | `GET /docs/exports/{exportId}/status` - Get export status | `zoom-docs-cli get <file>` fallback |
+| Done | `POST /docs/exports` - Create export | `zoom-docs-cli export <file>` |
+| Done | `GET /docs/exports/{exportId}/status` - Get export status | `zoom-docs-cli export-status <exportId>` |
 
 ## Collaborators
 
