@@ -129,6 +129,7 @@ zoom-docs-cli children "https://docs.zoom.us/doc/cUD70vChRIydsC_ci1rfaw"
 zoom-docs-cli collaborators "https://docs.zoom.us/doc/cUD70vChRIydsC_ci1rfaw"
 zoom-docs-cli general-access "https://docs.zoom.us/doc/cUD70vChRIydsC_ci1rfaw"
 zoom-docs-cli import-content --file ./draft.md --file-name "Draft from CLI"
+zoom-docs-cli create --file-name "Folder from CLI" --file-type folder
 zoom-docs-cli delete cUD70vChRIydsC_ci1rfaw --yes
 ```
 

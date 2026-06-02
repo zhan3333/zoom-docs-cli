@@ -83,6 +83,11 @@ async function main() {
     return;
   }
 
+  if (command === "create") {
+    await handleCreate(args);
+    return;
+  }
+
   if (command === "delete") {
     await handleDelete(args);
     return;
@@ -272,6 +277,20 @@ async function handleImportContent(args) {
   console.log(JSON.stringify(result, null, 2));
 }
 
+async function handleCreate(args) {
+  const fileName = args["file-name"] || args.name || "Untitled";
+  const fileType = args["file-type"] || args.type || "doc";
+  const parentId = args["parent-id"];
+
+  const accessToken = await getValidAccessToken(args);
+  const result = await createFile(accessToken, {
+    file_name: fileName,
+    file_type: fileType,
+    parent_id: parentId
+  });
+  console.log(JSON.stringify(result, null, 2));
+}
+
 async function handleDelete(args) {
   const input = args._[1];
   if (!input) {
@@ -344,6 +363,18 @@ async function createFileFromContent(accessToken, { file_name, parent_id, conten
   if (parent_id) body.parent_id = parent_id;
 
   const response = await zoomFetch("/docs/import_content", {
+    method: "POST",
+    accessToken,
+    body: JSON.stringify(body)
+  });
+  return response.json();
+}
+
+async function createFile(accessToken, { file_name, file_type, parent_id }) {
+  const body = { file_name, file_type };
+  if (parent_id) body.parent_id = parent_id;
+
+  const response = await zoomFetch("/docs/files", {
     method: "POST",
     accessToken,
     body: JSON.stringify(body)
@@ -750,6 +781,7 @@ Usage:
   zoom-docs-cli collaborators <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli general-access <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli import-content --file FILE.md [--file-name NAME] [--parent-id FILE_ID]
+  zoom-docs-cli create [--file-name NAME] [--file-type doc|folder|data_table] [--parent-id FILE_ID]
   zoom-docs-cli delete <docs.zoom.us/doc URL | fileId> --yes
 
 Environment:
