@@ -83,6 +83,11 @@ async function main() {
     return;
   }
 
+  if (command === "delete") {
+    await handleDelete(args);
+    return;
+  }
+
   throw new Error(`Unknown command: ${command}`);
 }
 
@@ -267,6 +272,21 @@ async function handleImportContent(args) {
   console.log(JSON.stringify(result, null, 2));
 }
 
+async function handleDelete(args) {
+  const input = args._[1];
+  if (!input) {
+    throw new Error("Usage: zoom-docs-cli delete <docs.zoom.us/doc URL | fileId> --yes");
+  }
+  if (!args.yes) {
+    throw new Error("Deleting a Zoom Docs file is destructive. Re-run with --yes to confirm.");
+  }
+
+  const fileId = extractFileId(input);
+  const accessToken = await getValidAccessToken(args);
+  await deleteFile(accessToken, fileId);
+  console.log(JSON.stringify({ deleted: true, file_id: fileId }, null, 2));
+}
+
 async function getFileContent(accessToken, fileId) {
   const response = await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}/content`, {
     method: "GET",
@@ -329,6 +349,13 @@ async function createFileFromContent(accessToken, { file_name, parent_id, conten
     body: JSON.stringify(body)
   });
   return response.json();
+}
+
+async function deleteFile(accessToken, fileId) {
+  await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}`, {
+    method: "DELETE",
+    accessToken
+  });
 }
 
 async function exportFileAsMarkdown(accessToken, fileId) {
@@ -723,6 +750,7 @@ Usage:
   zoom-docs-cli collaborators <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli general-access <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli import-content --file FILE.md [--file-name NAME] [--parent-id FILE_ID]
+  zoom-docs-cli delete <docs.zoom.us/doc URL | fileId> --yes
 
 Environment:
   ZOOM_PUBLIC_CLIENT_ID Defaults to ${DEFAULT_PUBLIC_CLIENT_ID}
