@@ -57,4 +57,4 @@ Source: <https://developers.zoom.us/docs/api/canvas/>
 | Done | `POST /docs/file_uploads` - Create a file upload | `zoom-docs-cli file-upload --file PATH` |
 | Done | `POST /docs/import_content` - Create a file from content | `zoom-docs-cli import-content --file FILE.md` |
 | Done | `POST /docs/imports` - Create a file by import | `zoom-docs-cli import-file --file-upload-id ID` |
-| Pending | `GET /docs/imports/{importId}/status` - Get import status | |
+| Done | `GET /docs/imports/{importId}/status` - Get import status | `zoom-docs-cli import-status <importId>` |

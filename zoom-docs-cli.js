@@ -104,6 +104,11 @@ async function main() {
     return;
   }
 
+  if (command === "import-status") {
+    await handleImportStatus(args);
+    return;
+  }
+
   if (command === "create") {
     await handleCreate(args);
     return;
@@ -375,6 +380,17 @@ async function handleImportFile(args) {
   console.log(JSON.stringify(result, null, 2));
 }
 
+async function handleImportStatus(args) {
+  const importId = args._[1];
+  if (!importId) {
+    throw new Error("Usage: zoom-docs-cli import-status <importId>");
+  }
+
+  const accessToken = await getValidAccessToken(args);
+  const status = await getImportStatus(accessToken, importId);
+  console.log(JSON.stringify(status, null, 2));
+}
+
 async function handleCreate(args) {
   const fileName = args["file-name"] || args.name || "Untitled";
   const fileType = args["file-type"] || args.type || "doc";
@@ -552,6 +568,14 @@ async function createImport(accessToken, options) {
     method: "POST",
     accessToken,
     body: JSON.stringify(body)
+  });
+  return response.json();
+}
+
+async function getImportStatus(accessToken, importId) {
+  const response = await zoomFetch(`/docs/imports/${encodeURIComponent(importId)}/status`, {
+    method: "GET",
+    accessToken
   });
   return response.json();
 }
@@ -992,6 +1016,7 @@ Usage:
   zoom-docs-cli import-content --file FILE.md [--file-name NAME] [--parent-id FILE_ID]
   zoom-docs-cli file-upload --file PATH
   zoom-docs-cli import-file --file-upload-id ID [--file-upload-type markdown] [--file-name NAME]
+  zoom-docs-cli import-status <importId>
   zoom-docs-cli create [--file-name NAME] [--file-type doc|folder|data_table] [--parent-id FILE_ID]
   zoom-docs-cli rename <docs.zoom.us/doc URL | fileId> --file-name NAME
   zoom-docs-cli delete <docs.zoom.us/doc URL | fileId> --yes
