@@ -99,6 +99,11 @@ async function main() {
     return;
   }
 
+  if (command === "import-file") {
+    await handleImportFile(args);
+    return;
+  }
+
   if (command === "create") {
     await handleCreate(args);
     return;
@@ -346,6 +351,30 @@ async function handleFileUpload(args) {
   console.log(JSON.stringify(result, null, 2));
 }
 
+async function handleImportFile(args) {
+  const fileUploadId = args["file-upload-id"];
+  const fileUploadType = args["file-upload-type"] || args.type || "markdown";
+  const fileName = args["file-name"] || args.name;
+  const fileType = args["file-type"] || "doc";
+  const parentId = args["parent-id"];
+  const userId = args["user-id"];
+
+  if (!fileUploadId) {
+    throw new Error("Usage: zoom-docs-cli import-file --file-upload-id ID [--file-upload-type markdown] [--file-name NAME]");
+  }
+
+  const accessToken = await getValidAccessToken(args);
+  const result = await createImport(accessToken, {
+    file_upload_id: fileUploadId,
+    file_upload_type: fileUploadType,
+    file_name: fileName,
+    file_type: fileType,
+    parent_id: parentId,
+    user_id: userId
+  });
+  console.log(JSON.stringify(result, null, 2));
+}
+
 async function handleCreate(args) {
   const fileName = args["file-name"] || args.name || "Untitled";
   const fileType = args["file-type"] || args.type || "doc";
@@ -507,6 +536,24 @@ async function fetchWithRetainedAuthorization(url, { method, accessToken, body }
   }
 
   return response;
+}
+
+async function createImport(accessToken, options) {
+  const body = {
+    file_upload_id: options.file_upload_id,
+    file_upload_type: options.file_upload_type,
+    file_type: options.file_type
+  };
+  for (const key of ["file_name", "parent_id", "user_id"]) {
+    if (options[key]) body[key] = options[key];
+  }
+
+  const response = await zoomFetch("/docs/imports", {
+    method: "POST",
+    accessToken,
+    body: JSON.stringify(body)
+  });
+  return response.json();
 }
 
 async function createFile(accessToken, { file_name, file_type, parent_id }) {
@@ -944,6 +991,7 @@ Usage:
   zoom-docs-cli general-access <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli import-content --file FILE.md [--file-name NAME] [--parent-id FILE_ID]
   zoom-docs-cli file-upload --file PATH
+  zoom-docs-cli import-file --file-upload-id ID [--file-upload-type markdown] [--file-name NAME]
   zoom-docs-cli create [--file-name NAME] [--file-type doc|folder|data_table] [--parent-id FILE_ID]
   zoom-docs-cli rename <docs.zoom.us/doc URL | fileId> --file-name NAME
   zoom-docs-cli delete <docs.zoom.us/doc URL | fileId> --yes
