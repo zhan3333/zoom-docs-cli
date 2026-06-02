@@ -88,6 +88,11 @@ async function main() {
     return;
   }
 
+  if (command === "rename") {
+    await handleRename(args);
+    return;
+  }
+
   if (command === "delete") {
     await handleDelete(args);
     return;
@@ -291,6 +296,19 @@ async function handleCreate(args) {
   console.log(JSON.stringify(result, null, 2));
 }
 
+async function handleRename(args) {
+  const input = args._[1];
+  const fileName = args["file-name"] || args.name;
+  if (!input || !fileName) {
+    throw new Error("Usage: zoom-docs-cli rename <docs.zoom.us/doc URL | fileId> --file-name NAME");
+  }
+
+  const fileId = extractFileId(input);
+  const accessToken = await getValidAccessToken(args);
+  await renameFile(accessToken, fileId, fileName);
+  console.log(JSON.stringify({ renamed: true, file_id: fileId, file_name: fileName }, null, 2));
+}
+
 async function handleDelete(args) {
   const input = args._[1];
   if (!input) {
@@ -380,6 +398,14 @@ async function createFile(accessToken, { file_name, file_type, parent_id }) {
     body: JSON.stringify(body)
   });
   return response.json();
+}
+
+async function renameFile(accessToken, fileId, fileName) {
+  await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}`, {
+    method: "PATCH",
+    accessToken,
+    body: JSON.stringify({ file_name: fileName })
+  });
 }
 
 async function deleteFile(accessToken, fileId) {
@@ -782,6 +808,7 @@ Usage:
   zoom-docs-cli general-access <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli import-content --file FILE.md [--file-name NAME] [--parent-id FILE_ID]
   zoom-docs-cli create [--file-name NAME] [--file-type doc|folder|data_table] [--parent-id FILE_ID]
+  zoom-docs-cli rename <docs.zoom.us/doc URL | fileId> --file-name NAME
   zoom-docs-cli delete <docs.zoom.us/doc URL | fileId> --yes
 
 Environment:

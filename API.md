@@ -11,7 +11,7 @@ Source: <https://developers.zoom.us/docs/api/canvas/>
 | Done | `GET /docs/files/{fileId}/content` - Get file content | `zoom-docs-cli get <file>` |
 | Done | `POST /docs/files` - Create a file | `zoom-docs-cli create --file-name NAME` |
 | Done | `GET /docs/files/{fileId}` - Get file metadata | `zoom-docs-cli metadata <file>` |
-| Pending | `PATCH /docs/files/{fileId}` - Modify file metadata | |
+| Done | `PATCH /docs/files/{fileId}` - Modify file metadata | `zoom-docs-cli rename <file> --file-name NAME` |
 | Done | `DELETE /docs/files/{fileId}` - Delete a file | `zoom-docs-cli delete <file> --yes` |
 | Done | `GET /docs/files/{fileId}/children` - List children under a file | `zoom-docs-cli children <file>` |
 
