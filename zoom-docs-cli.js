@@ -84,6 +84,11 @@ async function main() {
     return;
   }
 
+  if (command === "add-collaborator") {
+    await handleAddCollaborator(args);
+    return;
+  }
+
   if (command === "general-access") {
     await handleGeneralAccess(args);
     return;
@@ -320,6 +325,19 @@ async function handleCollaborators(args) {
   console.log(JSON.stringify(collaborators, null, 2));
 }
 
+async function handleAddCollaborator(args) {
+  const input = args._[1];
+  if (!input) {
+    throw new Error("Usage: zoom-docs-cli add-collaborator <file> (--user-id ID | --email EMAIL | --channel-id ID) [--role viewer|commenter|editor|co-owner]");
+  }
+
+  const collaborator = buildCollaboratorArg(args);
+  const fileId = extractFileId(input);
+  const accessToken = await getValidAccessToken(args);
+  const result = await addCollaborator(accessToken, fileId, collaborator);
+  console.log(JSON.stringify(result, null, 2));
+}
+
 async function handleGeneralAccess(args) {
   const input = args._[1];
   if (!input) {
@@ -473,6 +491,15 @@ async function listCollaborators(accessToken, fileId) {
   const response = await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}/collaborators`, {
     method: "GET",
     accessToken
+  });
+  return response.json();
+}
+
+async function addCollaborator(accessToken, fileId, collaborator) {
+  const response = await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}/collaborators`, {
+    method: "POST",
+    accessToken,
+    body: JSON.stringify({ collaborators: [collaborator] })
   });
   return response.json();
 }
@@ -917,6 +944,18 @@ async function readContentArg(args) {
   throw new Error("Provide Markdown content with --content TEXT or --file PATH.");
 }
 
+function buildCollaboratorArg(args) {
+  const ids = ["user-id", "email", "channel-id"].filter((key) => Boolean(args[key]));
+  if (ids.length !== 1) {
+    throw new Error("Provide exactly one collaborator identifier: --user-id, --email, or --channel-id.");
+  }
+
+  const collaborator = { role: args.role || "viewer" };
+  const key = ids[0];
+  collaborator[key.replace(/-/g, "_")] = String(args[key]);
+  return collaborator;
+}
+
 function extractFileId(input) {
   try {
     const url = new URL(input);
@@ -1012,6 +1051,7 @@ Usage:
   zoom-docs-cli root [userId]
   zoom-docs-cli children <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli collaborators <docs.zoom.us/doc URL | fileId>
+  zoom-docs-cli add-collaborator <file> (--user-id ID | --email EMAIL | --channel-id ID) [--role ROLE]
   zoom-docs-cli general-access <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli import-content --file FILE.md [--file-name NAME] [--parent-id FILE_ID]
   zoom-docs-cli file-upload --file PATH
