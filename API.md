@@ -26,7 +26,7 @@ Source: <https://developers.zoom.us/docs/api/canvas/>
 
 | Status | API | CLI command |
 | --- | --- | --- |
-| Pending | `GET /docs/files/{fileId}/collaborators` - List collaborators | |
+| Done | `GET /docs/files/{fileId}/collaborators` - List collaborators | `zoom-docs-cli collaborators <file>` |
 | Pending | `POST /docs/files/{fileId}/collaborators` - Add collaborators | |
 | Pending | `PATCH /docs/files/{fileId}/collaborators/{collaboratorId}` - Modify collaborator role | |
 | Pending | `DELETE /docs/files/{fileId}/collaborators/{collaboratorId}` - Remove collaborator | |

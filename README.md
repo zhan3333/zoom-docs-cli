@@ -126,6 +126,7 @@ zoom-docs-cli auth logout
 zoom-docs-cli metadata "https://docs.zoom.us/doc/cUD70vChRIydsC_ci1rfaw"
 zoom-docs-cli root me
 zoom-docs-cli children "https://docs.zoom.us/doc/cUD70vChRIydsC_ci1rfaw"
+zoom-docs-cli collaborators "https://docs.zoom.us/doc/cUD70vChRIydsC_ci1rfaw"
 ```
 
 To remove old confidential OAuth credentials from local config:
