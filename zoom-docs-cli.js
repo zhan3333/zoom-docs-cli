@@ -89,6 +89,11 @@ async function main() {
     return;
   }
 
+  if (command === "update-collaborator") {
+    await handleUpdateCollaborator(args);
+    return;
+  }
+
   if (command === "general-access") {
     await handleGeneralAccess(args);
     return;
@@ -338,6 +343,20 @@ async function handleAddCollaborator(args) {
   console.log(JSON.stringify(result, null, 2));
 }
 
+async function handleUpdateCollaborator(args) {
+  const input = args._[1];
+  const collaboratorId = args._[2] || args["collaborator-id"];
+  const role = args.role;
+  if (!input || !collaboratorId || !role) {
+    throw new Error("Usage: zoom-docs-cli update-collaborator <file> <collaboratorId> --role viewer|commenter|editor|co-owner");
+  }
+
+  const fileId = extractFileId(input);
+  const accessToken = await getValidAccessToken(args);
+  await updateCollaborator(accessToken, fileId, collaboratorId, role);
+  console.log(JSON.stringify({ updated: true, file_id: fileId, collaborator_id: collaboratorId, role }, null, 2));
+}
+
 async function handleGeneralAccess(args) {
   const input = args._[1];
   if (!input) {
@@ -502,6 +521,14 @@ async function addCollaborator(accessToken, fileId, collaborator) {
     body: JSON.stringify({ collaborators: [collaborator] })
   });
   return response.json();
+}
+
+async function updateCollaborator(accessToken, fileId, collaboratorId, role) {
+  await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}/collaborators/${encodeURIComponent(collaboratorId)}`, {
+    method: "PATCH",
+    accessToken,
+    body: JSON.stringify({ role })
+  });
 }
 
 async function getGeneralAccess(accessToken, fileId) {
@@ -1052,6 +1079,7 @@ Usage:
   zoom-docs-cli children <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli collaborators <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli add-collaborator <file> (--user-id ID | --email EMAIL | --channel-id ID) [--role ROLE]
+  zoom-docs-cli update-collaborator <file> <collaboratorId> --role ROLE
   zoom-docs-cli general-access <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli import-content --file FILE.md [--file-name NAME] [--parent-id FILE_ID]
   zoom-docs-cli file-upload --file PATH
