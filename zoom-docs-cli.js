@@ -73,6 +73,11 @@ async function main() {
     return;
   }
 
+  if (command === "general-access") {
+    await handleGeneralAccess(args);
+    return;
+  }
+
   throw new Error(`Unknown command: ${command}`);
 }
 
@@ -231,6 +236,18 @@ async function handleCollaborators(args) {
   console.log(JSON.stringify(collaborators, null, 2));
 }
 
+async function handleGeneralAccess(args) {
+  const input = args._[1];
+  if (!input) {
+    throw new Error("Usage: zoom-docs-cli general-access <docs.zoom.us/doc URL | fileId>");
+  }
+
+  const fileId = extractFileId(input);
+  const accessToken = await getValidAccessToken(args);
+  const setting = await getGeneralAccess(accessToken, fileId);
+  console.log(JSON.stringify(setting, null, 2));
+}
+
 async function getFileContent(accessToken, fileId) {
   const response = await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}/content`, {
     method: "GET",
@@ -269,6 +286,14 @@ async function listChildren(accessToken, fileId) {
 
 async function listCollaborators(accessToken, fileId) {
   const response = await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}/collaborators`, {
+    method: "GET",
+    accessToken
+  });
+  return response.json();
+}
+
+async function getGeneralAccess(accessToken, fileId) {
+  const response = await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}/general_access_setting`, {
     method: "GET",
     accessToken
   });
@@ -653,6 +678,7 @@ Usage:
   zoom-docs-cli root [userId]
   zoom-docs-cli children <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli collaborators <docs.zoom.us/doc URL | fileId>
+  zoom-docs-cli general-access <docs.zoom.us/doc URL | fileId>
 
 Environment:
   ZOOM_PUBLIC_CLIENT_ID Defaults to ${DEFAULT_PUBLIC_CLIENT_ID}

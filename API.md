@@ -35,7 +35,7 @@ Source: <https://developers.zoom.us/docs/api/canvas/>
 
 | Status | API | CLI command |
 | --- | --- | --- |
-| Pending | `GET /docs/files/{fileId}/general_access_setting` - Get general access setting | |
+| Done | `GET /docs/files/{fileId}/general_access_setting` - Get general access setting | `zoom-docs-cli general-access <file>` |
 | Pending | `PATCH /docs/files/{fileId}/general_access_setting` - Modify general access setting | |
 
 ## Ownership
