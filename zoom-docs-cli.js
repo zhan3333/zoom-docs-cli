@@ -63,6 +63,11 @@ async function main() {
     return;
   }
 
+  if (command === "children") {
+    await handleChildren(args);
+    return;
+  }
+
   throw new Error(`Unknown command: ${command}`);
 }
 
@@ -197,6 +202,18 @@ async function handleRoot(args) {
   console.log(JSON.stringify(root, null, 2));
 }
 
+async function handleChildren(args) {
+  const input = args._[1];
+  if (!input) {
+    throw new Error("Usage: zoom-docs-cli children <docs.zoom.us/doc URL | fileId>");
+  }
+
+  const fileId = extractFileId(input);
+  const accessToken = await getValidAccessToken(args);
+  const children = await listChildren(accessToken, fileId);
+  console.log(JSON.stringify(children, null, 2));
+}
+
 async function getFileContent(accessToken, fileId) {
   const response = await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}/content`, {
     method: "GET",
@@ -219,6 +236,14 @@ async function getFileMetadata(accessToken, fileId) {
 
 async function getUserRoot(accessToken, userId) {
   const response = await zoomFetch(`/docs/users/${encodeURIComponent(userId)}/root`, {
+    method: "GET",
+    accessToken
+  });
+  return response.json();
+}
+
+async function listChildren(accessToken, fileId) {
+  const response = await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}/children`, {
     method: "GET",
     accessToken
   });
@@ -601,6 +626,7 @@ Usage:
   zoom-docs-cli get <docs.zoom.us/doc URL | fileId> [--out FILE] [--json]
   zoom-docs-cli metadata <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli root [userId]
+  zoom-docs-cli children <docs.zoom.us/doc URL | fileId>
 
 Environment:
   ZOOM_PUBLIC_CLIENT_ID Defaults to ${DEFAULT_PUBLIC_CLIENT_ID}
