@@ -55,6 +55,6 @@ Source: <https://developers.zoom.us/docs/api/canvas/>
 | Status | API | CLI command |
 | --- | --- | --- |
 | Pending | `POST /docs/file_uploads` - Create a file upload | |
-| Pending | `POST /docs/import_content` - Create a file from content | |
+| Done | `POST /docs/import_content` - Create a file from content | `zoom-docs-cli import-content --file FILE.md` |
 | Pending | `POST /docs/imports` - Create a file by import | |
 | Pending | `GET /docs/imports/{importId}/status` - Get import status | |

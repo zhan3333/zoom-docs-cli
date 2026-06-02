@@ -78,6 +78,11 @@ async function main() {
     return;
   }
 
+  if (command === "import-content") {
+    await handleImportContent(args);
+    return;
+  }
+
   throw new Error(`Unknown command: ${command}`);
 }
 
@@ -248,6 +253,20 @@ async function handleGeneralAccess(args) {
   console.log(JSON.stringify(setting, null, 2));
 }
 
+async function handleImportContent(args) {
+  const fileName = args["file-name"] || args.name || "zoom-docs-cli import test";
+  const parentId = args["parent-id"];
+  const content = await readContentArg(args);
+
+  const accessToken = await getValidAccessToken(args);
+  const result = await createFileFromContent(accessToken, {
+    file_name: fileName,
+    parent_id: parentId,
+    content
+  });
+  console.log(JSON.stringify(result, null, 2));
+}
+
 async function getFileContent(accessToken, fileId) {
   const response = await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}/content`, {
     method: "GET",
@@ -296,6 +315,18 @@ async function getGeneralAccess(accessToken, fileId) {
   const response = await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}/general_access_setting`, {
     method: "GET",
     accessToken
+  });
+  return response.json();
+}
+
+async function createFileFromContent(accessToken, { file_name, parent_id, content }) {
+  const body = { file_name, content };
+  if (parent_id) body.parent_id = parent_id;
+
+  const response = await zoomFetch("/docs/import_content", {
+    method: "POST",
+    accessToken,
+    body: JSON.stringify(body)
   });
   return response.json();
 }
@@ -585,6 +616,18 @@ async function writeJson(filePath, value) {
   await fs.writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`, { mode: 0o600 });
 }
 
+async function readContentArg(args) {
+  if (args.content !== undefined && args.content !== true) {
+    return String(args.content);
+  }
+
+  if (args.file) {
+    return fs.readFile(path.resolve(String(args.file)), "utf8");
+  }
+
+  throw new Error("Provide Markdown content with --content TEXT or --file PATH.");
+}
+
 function extractFileId(input) {
   try {
     const url = new URL(input);
@@ -679,6 +722,7 @@ Usage:
   zoom-docs-cli children <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli collaborators <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli general-access <docs.zoom.us/doc URL | fileId>
+  zoom-docs-cli import-content --file FILE.md [--file-name NAME] [--parent-id FILE_ID]
 
 Environment:
   ZOOM_PUBLIC_CLIENT_ID Defaults to ${DEFAULT_PUBLIC_CLIENT_ID}
