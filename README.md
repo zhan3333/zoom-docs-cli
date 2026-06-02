@@ -131,6 +131,7 @@ zoom-docs-cli children "https://docs.zoom.us/doc/cUD70vChRIydsC_ci1rfaw"
 zoom-docs-cli collaborators "https://docs.zoom.us/doc/cUD70vChRIydsC_ci1rfaw"
 zoom-docs-cli add-collaborator FILE_ID --user-id USER_ID --role viewer
 zoom-docs-cli update-collaborator FILE_ID COLLABORATOR_ID --role commenter
+zoom-docs-cli remove-collaborator FILE_ID COLLABORATOR_ID
 zoom-docs-cli general-access "https://docs.zoom.us/doc/cUD70vChRIydsC_ci1rfaw"
 zoom-docs-cli import-content --file ./draft.md --file-name "Draft from CLI"
 zoom-docs-cli file-upload --file ./draft.md

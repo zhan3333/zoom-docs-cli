@@ -29,7 +29,7 @@ Source: <https://developers.zoom.us/docs/api/canvas/>
 | Done | `GET /docs/files/{fileId}/collaborators` - List collaborators | `zoom-docs-cli collaborators <file>` |
 | Done | `POST /docs/files/{fileId}/collaborators` - Add collaborators | `zoom-docs-cli add-collaborator <file> --user-id ID` |
 | Done | `PATCH /docs/files/{fileId}/collaborators/{collaboratorId}` - Modify collaborator role | `zoom-docs-cli update-collaborator <file> <collaboratorId> --role ROLE` |
-| Pending | `DELETE /docs/files/{fileId}/collaborators/{collaboratorId}` - Remove collaborator | |
+| Done | `DELETE /docs/files/{fileId}/collaborators/{collaboratorId}` - Remove collaborator | `zoom-docs-cli remove-collaborator <file> <collaboratorId>` |
 
 ## General Access
 

@@ -94,6 +94,11 @@ async function main() {
     return;
   }
 
+  if (command === "remove-collaborator") {
+    await handleRemoveCollaborator(args);
+    return;
+  }
+
   if (command === "general-access") {
     await handleGeneralAccess(args);
     return;
@@ -357,6 +362,19 @@ async function handleUpdateCollaborator(args) {
   console.log(JSON.stringify({ updated: true, file_id: fileId, collaborator_id: collaboratorId, role }, null, 2));
 }
 
+async function handleRemoveCollaborator(args) {
+  const input = args._[1];
+  const collaboratorId = args._[2] || args["collaborator-id"];
+  if (!input || !collaboratorId) {
+    throw new Error("Usage: zoom-docs-cli remove-collaborator <file> <collaboratorId>");
+  }
+
+  const fileId = extractFileId(input);
+  const accessToken = await getValidAccessToken(args);
+  await removeCollaborator(accessToken, fileId, collaboratorId);
+  console.log(JSON.stringify({ removed: true, file_id: fileId, collaborator_id: collaboratorId }, null, 2));
+}
+
 async function handleGeneralAccess(args) {
   const input = args._[1];
   if (!input) {
@@ -528,6 +546,13 @@ async function updateCollaborator(accessToken, fileId, collaboratorId, role) {
     method: "PATCH",
     accessToken,
     body: JSON.stringify({ role })
+  });
+}
+
+async function removeCollaborator(accessToken, fileId, collaboratorId) {
+  await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}/collaborators/${encodeURIComponent(collaboratorId)}`, {
+    method: "DELETE",
+    accessToken
   });
 }
 
@@ -1080,6 +1105,7 @@ Usage:
   zoom-docs-cli collaborators <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli add-collaborator <file> (--user-id ID | --email EMAIL | --channel-id ID) [--role ROLE]
   zoom-docs-cli update-collaborator <file> <collaboratorId> --role ROLE
+  zoom-docs-cli remove-collaborator <file> <collaboratorId>
   zoom-docs-cli general-access <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli import-content --file FILE.md [--file-name NAME] [--parent-id FILE_ID]
   zoom-docs-cli file-upload --file PATH
