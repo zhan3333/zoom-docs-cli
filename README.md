@@ -121,6 +121,7 @@ and downloads the generated Markdown export.
 zoom-docs-cli config show
 zoom-docs-cli token status
 zoom-docs-cli auth logout
+zoom-docs-cli metadata "https://docs.zoom.us/doc/cUD70vChRIydsC_ci1rfaw"
 ```
 
 To remove old confidential OAuth credentials from local config:

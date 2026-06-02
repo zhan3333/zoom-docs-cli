@@ -53,6 +53,11 @@ async function main() {
     return;
   }
 
+  if (command === "metadata") {
+    await handleMetadata(args);
+    return;
+  }
+
   throw new Error(`Unknown command: ${command}`);
 }
 
@@ -168,6 +173,18 @@ async function handleGet(args) {
   console.log(`Saved ${outPath}`);
 }
 
+async function handleMetadata(args) {
+  const input = args._[1];
+  if (!input) {
+    throw new Error("Usage: zoom-docs-cli metadata <docs.zoom.us/doc URL | fileId>");
+  }
+
+  const fileId = extractFileId(input);
+  const accessToken = await getValidAccessToken(args);
+  const metadata = await getFileMetadata(accessToken, fileId);
+  console.log(JSON.stringify(metadata, null, 2));
+}
+
 async function getFileContent(accessToken, fileId) {
   const response = await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}/content`, {
     method: "GET",
@@ -178,6 +195,14 @@ async function getFileContent(accessToken, fileId) {
     file_name: json.file_name || fileId,
     file_content: json.file_content || ""
   };
+}
+
+async function getFileMetadata(accessToken, fileId) {
+  const response = await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}`, {
+    method: "GET",
+    accessToken
+  });
+  return response.json();
 }
 
 async function exportFileAsMarkdown(accessToken, fileId) {
@@ -554,6 +579,7 @@ Usage:
   zoom-docs-cli auth logout
   zoom-docs-cli token status
   zoom-docs-cli get <docs.zoom.us/doc URL | fileId> [--out FILE] [--json]
+  zoom-docs-cli metadata <docs.zoom.us/doc URL | fileId>
 
 Environment:
   ZOOM_PUBLIC_CLIENT_ID Defaults to ${DEFAULT_PUBLIC_CLIENT_ID}

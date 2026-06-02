@@ -10,7 +10,7 @@ Source: <https://developers.zoom.us/docs/api/canvas/>
 | --- | --- | --- |
 | Done | `GET /docs/files/{fileId}/content` - Get file content | `zoom-docs-cli get <file>` |
 | Pending | `POST /docs/files` - Create a file | |
-| Pending | `GET /docs/files/{fileId}` - Get file metadata | |
+| Done | `GET /docs/files/{fileId}` - Get file metadata | `zoom-docs-cli metadata <file>` |
 | Pending | `PATCH /docs/files/{fileId}` - Modify file metadata | |
 | Pending | `DELETE /docs/files/{fileId}` - Delete a file | |
 | Pending | `GET /docs/files/{fileId}/children` - List children under a file | |
