@@ -42,7 +42,7 @@ Source: <https://developers.zoom.us/docs/api/canvas/>
 
 | Status | API | CLI command |
 | --- | --- | --- |
-| Pending | `PUT /docs/files/{fileId}/owner` - Transfer file ownership | |
+| Done | `PUT /docs/files/{fileId}/owner` - Transfer file ownership. Guarded by `--yes` because the action moves ownership to another user. | `zoom-docs-cli transfer-owner <file> --user-id USER_ID --yes` |
 
 ## User Roots
 

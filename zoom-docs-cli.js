@@ -109,6 +109,11 @@ async function main() {
     return;
   }
 
+  if (command === "transfer-owner") {
+    await handleTransferOwner(args);
+    return;
+  }
+
   if (command === "import-content") {
     await handleImportContent(args);
     return;
@@ -406,6 +411,22 @@ async function handleSetGeneralAccess(args) {
   console.log(JSON.stringify({ updated: true, file_id: fileId, general_access_setting: { share_scope: shareScope, role } }, null, 2));
 }
 
+async function handleTransferOwner(args) {
+  const input = args._[1];
+  const userId = args["user-id"];
+  if (!input || !userId) {
+    throw new Error("Usage: zoom-docs-cli transfer-owner <file> --user-id USER_ID --yes");
+  }
+  if (!args.yes) {
+    throw new Error("Ownership transfer is irreversible from this CLI. Re-run with --yes to confirm.");
+  }
+
+  const fileId = extractFileId(input);
+  const accessToken = await getValidAccessToken(args);
+  await transferOwnership(accessToken, fileId, userId);
+  console.log(JSON.stringify({ transferred: true, file_id: fileId, user_id: userId }, null, 2));
+}
+
 async function handleImportContent(args) {
   const fileName = args["file-name"] || args.name || "zoom-docs-cli import test";
   const parentId = args["parent-id"];
@@ -591,6 +612,14 @@ async function setGeneralAccess(accessToken, fileId, setting) {
     method: "PATCH",
     accessToken,
     body: JSON.stringify({ general_access_setting: generalAccessSetting })
+  });
+}
+
+async function transferOwnership(accessToken, fileId, userId) {
+  await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}/owner`, {
+    method: "PUT",
+    accessToken,
+    body: JSON.stringify({ user_id: userId })
   });
 }
 
@@ -1138,6 +1167,7 @@ Usage:
   zoom-docs-cli remove-collaborator <file> <collaboratorId>
   zoom-docs-cli general-access <docs.zoom.us/doc URL | fileId>
   zoom-docs-cli set-general-access <file> --share-scope SCOPE [--role ROLE]
+  zoom-docs-cli transfer-owner <file> --user-id USER_ID --yes
   zoom-docs-cli import-content --file FILE.md [--file-name NAME] [--parent-id FILE_ID]
   zoom-docs-cli file-upload --file PATH
   zoom-docs-cli import-file --file-upload-id ID [--file-upload-type markdown] [--file-name NAME]
