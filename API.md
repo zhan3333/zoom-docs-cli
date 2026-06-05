@@ -36,7 +36,7 @@ Source: <https://developers.zoom.us/docs/api/canvas/>
 | Status | API | CLI command |
 | --- | --- | --- |
 | Done | `GET /docs/files/{fileId}/general_access_setting` - Get general access setting | `zoom-docs-cli general-access <file>` |
-| Pending | `PATCH /docs/files/{fileId}/general_access_setting` - Modify general access setting | |
+| Done | `PATCH /docs/files/{fileId}/general_access_setting` - Modify general access setting. Implemented with the documented request body; live test reached Zoom API but Zoom returned HTTP 500 for documented role/scope combinations on a temporary doc. | `zoom-docs-cli set-general-access <file> --share-scope SCOPE` |
 
 ## Ownership
 

@@ -104,6 +104,11 @@ async function main() {
     return;
   }
 
+  if (command === "set-general-access") {
+    await handleSetGeneralAccess(args);
+    return;
+  }
+
   if (command === "import-content") {
     await handleImportContent(args);
     return;
@@ -387,6 +392,20 @@ async function handleGeneralAccess(args) {
   console.log(JSON.stringify(setting, null, 2));
 }
 
+async function handleSetGeneralAccess(args) {
+  const input = args._[1];
+  const shareScope = args["share-scope"];
+  const role = args.role;
+  if (!input || !shareScope) {
+    throw new Error("Usage: zoom-docs-cli set-general-access <file> --share-scope collaborators_only|anyone_in_org|anyone_with_link [--role viewer|commenter|editor]");
+  }
+
+  const fileId = extractFileId(input);
+  const accessToken = await getValidAccessToken(args);
+  await setGeneralAccess(accessToken, fileId, { share_scope: shareScope, role });
+  console.log(JSON.stringify({ updated: true, file_id: fileId, general_access_setting: { share_scope: shareScope, role } }, null, 2));
+}
+
 async function handleImportContent(args) {
   const fileName = args["file-name"] || args.name || "zoom-docs-cli import test";
   const parentId = args["parent-id"];
@@ -562,6 +581,17 @@ async function getGeneralAccess(accessToken, fileId) {
     accessToken
   });
   return response.json();
+}
+
+async function setGeneralAccess(accessToken, fileId, setting) {
+  const generalAccessSetting = { share_scope: setting.share_scope };
+  if (setting.role) generalAccessSetting.role = setting.role;
+
+  await zoomFetch(`/docs/files/${encodeURIComponent(fileId)}/general_access_setting`, {
+    method: "PATCH",
+    accessToken,
+    body: JSON.stringify({ general_access_setting: generalAccessSetting })
+  });
 }
 
 async function createFileFromContent(accessToken, { file_name, parent_id, content }) {
@@ -1107,6 +1137,7 @@ Usage:
   zoom-docs-cli update-collaborator <file> <collaboratorId> --role ROLE
   zoom-docs-cli remove-collaborator <file> <collaboratorId>
   zoom-docs-cli general-access <docs.zoom.us/doc URL | fileId>
+  zoom-docs-cli set-general-access <file> --share-scope SCOPE [--role ROLE]
   zoom-docs-cli import-content --file FILE.md [--file-name NAME] [--parent-id FILE_ID]
   zoom-docs-cli file-upload --file PATH
   zoom-docs-cli import-file --file-upload-id ID [--file-upload-type markdown] [--file-name NAME]
